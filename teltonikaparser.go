@@ -8,6 +8,7 @@
 package teltonikaparser
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/filipkroca/b2n"
@@ -43,8 +44,47 @@ type Element struct {
 	Value  []byte // Value of the element represented by slice of bytes
 }
 
+// GetImei receives a slice of bytes and retrives the imei from the data
+// it returns a string which is the imei and the length of the imei string
+func GetTCPImei(src string) (string, int, error) {
+	bs, err := hex.DecodeString(src)
+	if err != nil {
+		fmt.Println(err)
+		return "", 0, err
+	}
+	imeilength := bs[0] + bs[1]
+	return string(bs[2 : imeilength+2]), int(imeilength), nil
+}
+
+// GetUDPImei parses the slice of bytes and returns:
+// imei, imei length, and error
+func GetUDPImei(bs *[]byte) (string, int, error) {
+	// determine bit number where start data, it can change because of IMEI length
+	imeiLenX, err := b2n.ParseBs2Uint8(bs, 7)
+	if err != nil {
+		return "", 0, fmt.Errorf("Decode error, %v", err)
+	}
+	imeiLen := int(imeiLenX)
+
+	if imeiLen != 15 && imeiLen != 16 {
+		//log.Fatalf("Error when determining IMEI len want 15 or 16, got %v", imeiLen)
+		return "", 0, fmt.Errorf("Error when determining IMEI len want 15 or 16, got %v", imeiLen)
+	}
+
+	// decode and validate IMEI
+	imei, err := b2n.ParseIMEI(bs, 8, imeiLen)
+	if err != nil {
+		return "", 0, fmt.Errorf("Decode error, %v", err)
+	}
+
+	// count start bit for data
+	// startByte := 8 + imeiLen
+	return imei, imeiLen, nil
+}
+
 // Decode takes a pointer to a slice of bytes with raw data and return Decoded struct
-func Decode(bs *[]byte) (Decoded, error) {
+// also takes a string to specify the protocol e.g TCP or UDP
+func Decode(bs *[]byte, protocol string) (Decoded, error) {
 	decoded := Decoded{}
 	var err error
 	var nextByte int
@@ -54,31 +94,20 @@ func Decode(bs *[]byte) (Decoded, error) {
 		return Decoded{}, fmt.Errorf("Minimum packet size is 45 Bytes, got %v", len(*bs))
 	}
 
-	// check for teltonika packet ID
-	if (*bs)[2] != 0xca || (*bs)[3] != 0xfe {
-		return Decoded{}, fmt.Errorf("Probably not Teltonika packet, trashed")
+	// set startbyte to 8 if the protocol is TCP
+	startByte := 8
+	if protocol == "UDP" {
+		// check for teltonika packet ID
+		if (*bs)[2] != 0xca || (*bs)[3] != 0xfe {
+			return Decoded{}, fmt.Errorf("Probably not Teltonika packet, trashed")
+		}
+		imei, imeilen, err := GetUDPImei(bs)
+		if err != nil {
+			return Decoded{}, err
+		}
+		decoded.IMEI = imei
+		startByte += imeilen
 	}
-
-	// determine bit number where start data, it can change because of IMEI length
-	imeiLenX, err := b2n.ParseBs2Uint8(bs, 7)
-	if err != nil {
-		return Decoded{}, fmt.Errorf("Decode error, %v", err)
-	}
-	imeiLen := int(imeiLenX)
-
-	if imeiLen != 15 && imeiLen != 16 {
-		//log.Fatalf("Error when determining IMEI len want 15 or 16, got %v", imeiLen)
-		return Decoded{}, fmt.Errorf("Error when determining IMEI len want 15 or 16, got %v", imeiLen)
-	}
-
-	// decode and validate IMEI
-	decoded.IMEI, err = b2n.ParseIMEI(bs, 8, imeiLen)
-	if err != nil {
-		return Decoded{}, fmt.Errorf("Decode error, %v", err)
-	}
-
-	// count start bit for data
-	startByte := 8 + imeiLen
 
 	// decode Codec ID
 	decoded.CodecID = (*bs)[startByte]
