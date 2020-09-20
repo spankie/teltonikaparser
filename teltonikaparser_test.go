@@ -11,12 +11,12 @@ import (
 	"testing"
 )
 
-func ExampleDecode() {
+func ExampleUDPDecode(t *testing.T) {
 	stringData := `01e4cafe0128000f333532303934303839333937343634080400000163c803eb02010a2524c01d4a377d00d3012f130032421b0a4503f00150051503ef01510052005900be00c1000ab50008b60006426fd8cd3d1ece605a5400005500007300005a0000c0000007c70000000df1000059d910002d33c65300000000570000000064000000f7bf000000000000000163c803e6e8010a2530781d4a316f00d40131130031421b0a4503f00150051503ef01510052005900be00c1000ab50008b60005426fcbcd3d1ece605a5400005500007300005a0000c0000007c70000000ef1000059d910002d33b95300000000570000000064000000f7bf000000000000000163c803df18010a2536961d4a2e4f00d50134130033421b0a4503f00150051503ef01510052005900be00c1000ab50008b6000542702bcd3d1ece605a5400005500007300005a0000c0000007c70000001ef1000059d910002d33aa5300000000570000000064000000f7bf000000000000000163c8039ce2010a25d8d41d49f42c00dc0123120058421b0a4503f00150051503ef01510052005900be00c1000ab50009b60005427031cd79d8ce605a5400005500007300005a0000c0000007c700000019f1000059d910002d32505300000000570000000064000000f7bf000000000004`
 
 	bs, _ := hex.DecodeString(stringData)
 	// decode a raw data byte slice
-	parsedData, err := Decode(&bs)
+	parsedData, err := Decode(&bs, "UDP")
 	if err != nil {
 		log.Panicf("Error when decoding a bs, %v\n", err)
 	}
@@ -28,12 +28,25 @@ func ExampleDecode() {
 	bs, _ = hex.DecodeString(stringData)
 
 	// decode a raw data byte slice
-	parsedData, err = Decode(&bs)
+	parsedData, err = Decode(&bs, "UDP")
 	if err != nil {
 		log.Panicf("Error when decoding a bs, %v\n", err)
 	}
 	fmt.Printf("Decoded packet codec 8 extended:\n%+v\n", parsedData)
 
+	if parsedData.IMEI != "352094089397464" {
+		t.Errorf("imei is not correct:\ngot %v\nwant: 352094089397464\n", parsedData.IMEI)
+		t.Fail()
+	}
+	if parsedData.CodecID != 8 {
+		t.Errorf("CodecID is not correct:\ngot %v\nwant: 8\n", parsedData.CodecID)
+		t.Fail()
+	}
+	ldata := len(parsedData.Data)
+	if uint8(ldata) != parsedData.NoOfData {
+		t.Errorf("len of data is not correct:\ngot %d\nwant: %d\n", ldata, parsedData.NoOfData)
+		t.Fail()
+	}
 	// Output:
 	// Decoded packet codec 8:
 	// {IMEI:352094089397464 CodecID:8 NoOfData:4 Data:[{UtimeMs:1528069090050 Utime:1528069090 Priority:1 Lat:170206400 Lng:491403133 Altitude:211 Angle:303 VisSat:19 Speed:50 EventID:66 Elements:[{Length:1 IOID:69 Value:[3]} {Length:1 IOID:240 Value:[1]} {Length:1 IOID:80 Value:[5]} {Length:1 IOID:21 Value:[3]} {Length:1 IOID:239 Value:[1]} {Length:1 IOID:81 Value:[0]} {Length:1 IOID:82 Value:[0]} {Length:1 IOID:89 Value:[0]} {Length:1 IOID:190 Value:[0]} {Length:1 IOID:193 Value:[0]} {Length:2 IOID:181 Value:[0 8]} {Length:2 IOID:182 Value:[0 6]} {Length:2 IOID:66 Value:[111 216]} {Length:2 IOID:205 Value:[61 30]} {Length:2 IOID:206 Value:[96 90]} {Length:2 IOID:84 Value:[0 0]} {Length:2 IOID:85 Value:[0 0]} {Length:2 IOID:115 Value:[0 0]} {Length:2 IOID:90 Value:[0 0]} {Length:2 IOID:192 Value:[0 0]} {Length:4 IOID:199 Value:[0 0 0 13]} {Length:4 IOID:241 Value:[0 0 89 217]} {Length:4 IOID:16 Value:[0 45 51 198]} {Length:4 IOID:83 Value:[0 0 0 0]} {Length:4 IOID:87 Value:[0 0 0 0]} {Length:4 IOID:100 Value:[0 0 0 247]} {Length:4 IOID:191 Value:[0 0 0 0]}]} {UtimeMs:1528069089000 Utime:1528069089 Priority:1 Lat:170209400 Lng:491401583 Altitude:212 Angle:305 VisSat:19 Speed:49 EventID:66 Elements:[{Length:1 IOID:69 Value:[3]} {Length:1 IOID:240 Value:[1]} {Length:1 IOID:80 Value:[5]} {Length:1 IOID:21 Value:[3]} {Length:1 IOID:239 Value:[1]} {Length:1 IOID:81 Value:[0]} {Length:1 IOID:82 Value:[0]} {Length:1 IOID:89 Value:[0]} {Length:1 IOID:190 Value:[0]} {Length:1 IOID:193 Value:[0]} {Length:2 IOID:181 Value:[0 8]} {Length:2 IOID:182 Value:[0 5]} {Length:2 IOID:66 Value:[111 203]} {Length:2 IOID:205 Value:[61 30]} {Length:2 IOID:206 Value:[96 90]} {Length:2 IOID:84 Value:[0 0]} {Length:2 IOID:85 Value:[0 0]} {Length:2 IOID:115 Value:[0 0]} {Length:2 IOID:90 Value:[0 0]} {Length:2 IOID:192 Value:[0 0]} {Length:4 IOID:199 Value:[0 0 0 14]} {Length:4 IOID:241 Value:[0 0 89 217]} {Length:4 IOID:16 Value:[0 45 51 185]} {Length:4 IOID:83 Value:[0 0 0 0]} {Length:4 IOID:87 Value:[0 0 0 0]} {Length:4 IOID:100 Value:[0 0 0 247]} {Length:4 IOID:191 Value:[0 0 0 0]}]} {UtimeMs:1528069087000 Utime:1528069087 Priority:1 Lat:170210966 Lng:491400783 Altitude:213 Angle:308 VisSat:19 Speed:51 EventID:66 Elements:[{Length:1 IOID:69 Value:[3]} {Length:1 IOID:240 Value:[1]} {Length:1 IOID:80 Value:[5]} {Length:1 IOID:21 Value:[3]} {Length:1 IOID:239 Value:[1]} {Length:1 IOID:81 Value:[0]} {Length:1 IOID:82 Value:[0]} {Length:1 IOID:89 Value:[0]} {Length:1 IOID:190 Value:[0]} {Length:1 IOID:193 Value:[0]} {Length:2 IOID:181 Value:[0 8]} {Length:2 IOID:182 Value:[0 5]} {Length:2 IOID:66 Value:[112 43]} {Length:2 IOID:205 Value:[61 30]} {Length:2 IOID:206 Value:[96 90]} {Length:2 IOID:84 Value:[0 0]} {Length:2 IOID:85 Value:[0 0]} {Length:2 IOID:115 Value:[0 0]} {Length:2 IOID:90 Value:[0 0]} {Length:2 IOID:192 Value:[0 0]} {Length:4 IOID:199 Value:[0 0 0 30]} {Length:4 IOID:241 Value:[0 0 89 217]} {Length:4 IOID:16 Value:[0 45 51 170]} {Length:4 IOID:83 Value:[0 0 0 0]} {Length:4 IOID:87 Value:[0 0 0 0]} {Length:4 IOID:100 Value:[0 0 0 247]} {Length:4 IOID:191 Value:[0 0 0 0]}]} {UtimeMs:1528069070050 Utime:1528069070 Priority:1 Lat:170252500 Lng:491385900 Altitude:220 Angle:291 VisSat:18 Speed:88 EventID:66 Elements:[{Length:1 IOID:69 Value:[3]} {Length:1 IOID:240 Value:[1]} {Length:1 IOID:80 Value:[5]} {Length:1 IOID:21 Value:[3]} {Length:1 IOID:239 Value:[1]} {Length:1 IOID:81 Value:[0]} {Length:1 IOID:82 Value:[0]} {Length:1 IOID:89 Value:[0]} {Length:1 IOID:190 Value:[0]} {Length:1 IOID:193 Value:[0]} {Length:2 IOID:181 Value:[0 9]} {Length:2 IOID:182 Value:[0 5]} {Length:2 IOID:66 Value:[112 49]} {Length:2 IOID:205 Value:[121 216]} {Length:2 IOID:206 Value:[96 90]} {Length:2 IOID:84 Value:[0 0]} {Length:2 IOID:85 Value:[0 0]} {Length:2 IOID:115 Value:[0 0]} {Length:2 IOID:90 Value:[0 0]} {Length:2 IOID:192 Value:[0 0]} {Length:4 IOID:199 Value:[0 0 0 25]} {Length:4 IOID:241 Value:[0 0 89 217]} {Length:4 IOID:16 Value:[0 45 50 80]} {Length:4 IOID:83 Value:[0 0 0 0]} {Length:4 IOID:87 Value:[0 0 0 0]} {Length:4 IOID:100 Value:[0 0 0 247]} {Length:4 IOID:191 Value:[0 0 0 0]}]}]}
@@ -41,7 +54,61 @@ func ExampleDecode() {
 	//{IMEI:352093085698206 CodecID:142 NoOfData:1 Data:[{UtimeMs:1545914096000 Utime:1545914096 Priority:2 Lat:0 Lng:0 Altitude:0 Angle:0 VisSat:0 Speed:0 EventID:252 Elements:[{Length:1 IOID:239 Value:[0]} {Length:1 IOID:240 Value:[0]} {Length:1 IOID:21 Value:[5]} {Length:1 IOID:200 Value:[0]} {Length:1 IOID:69 Value:[2]} {Length:1 IOID:1 Value:[0]} {Length:1 IOID:113 Value:[0]} {Length:1 IOID:252 Value:[0]} {Length:2 IOID:181 Value:[0 0]} {Length:2 IOID:182 Value:[0 0]} {Length:2 IOID:66 Value:[48 86]} {Length:2 IOID:205 Value:[67 42]} {Length:2 IOID:206 Value:[96 100]} {Length:2 IOID:17 Value:[0 9]} {Length:2 IOID:18 Value:[255 34]} {Length:2 IOID:19 Value:[3 209]} {Length:2 IOID:15 Value:[0 0]} {Length:4 IOID:241 Value:[0 0 89 217]} {Length:4 IOID:16 Value:[0 0 0 0]}]}]}
 }
 
-func ExampleHumanDecoder_Human() {
+func ExampleTCPDecode(t *testing.T) {
+	stringData := `000000000000004A8E010000016B412CEE000100000000000000000000000000000000010005000100010100010011001D00010010015E2C880002000B000000003544C87A000E000000001DD7E06A00000100002994`
+
+	bs, _ := hex.DecodeString(stringData)
+	// decode a raw data byte slice
+	parsedData, err := Decode(&bs, "TCP")
+	if err != nil {
+		log.Panicf("Error when decoding a bs, %v\n", err)
+	}
+	fmt.Printf("Decoded packet codec 8:\n%+v\n", parsedData)
+
+	// test with Codec8 Extended packet
+	stringData = `00000000000000A98E020000017357633410000F0DC39B2095964A00AC00F80B00000000000B000500F00100150400C800004501007156000500B5000500B600040018000000430FE00044011B000100F10000601B000000000000017357633BE1000F0DC39B2095964A00AC00F80B000001810001000000000000000000010181002D11213102030405060708090A0B0C0D0E0F104545010ABC212102030405060708090A0B0C0D0E0F10020B010AAD020000BF30`
+
+	bs, _ = hex.DecodeString(stringData)
+
+	// decode a raw data byte slice
+	parsedData, err = Decode(&bs, "TCP")
+	if err != nil {
+		t.Fatalf("Error when decoding a bs, %v\n", err)
+	}
+	// fmt.Printf("Decoded packet codec 8 extended:\n%+v\n", parsedData)
+
+	if parsedData.NoOfData != 2 {
+		t.Errorf("NoOfData is not correct:\ngot %v\nwant: 2\n", parsedData.NoOfData)
+		t.Fail()
+	}
+	if parsedData.CodecID != 8 {
+		t.Errorf("CodecID is not correct:\ngot %v\nwant: 8\n", parsedData.CodecID)
+		t.Fail()
+	}
+	ldata := len(parsedData.Data)
+	if uint8(ldata) != parsedData.NoOfData {
+		t.Errorf("len of data is not correct:\ngot %d\nwant: %d\n", ldata, parsedData.NoOfData)
+		t.Fail()
+	}
+}
+
+func TestGetTCPImei(t *testing.T) {
+	encodedimei := "000F333536333037303432343431303133"
+	imei, imeilen, err := GetTCPImei(encodedimei)
+	if err != nil {
+		t.Fatalf("error getting the imei: %v", err)
+		// t.Fail()
+	}
+	actualimei := "356307042441013"
+	if imei != actualimei {
+		t.Errorf("wrong imei. got: %s\nwant: %s", imei, actualimei)
+	}
+	if imeilen != 15 {
+		t.Errorf("got: %d\nwant: %d\n", imeilen, 15)
+	}
+}
+
+func ExampleUDPHumanDecoder_Human() {
 
 	// test with Codec8 Extended packet
 	stringData := `01e4cafe0126000f333532303934303839333937343634080400000163c803b420010a259e1a1d4a057d00da0128130057421b0a4503f00150051503ef01510052005900be00c1000ab50008b60005427025cd79d8ce605a5400005500007300005a0000c0000007c700000018f1000059d910002d32c85300000000570000000064000000f7bf000000000000000163c803ac50010a25a9d21d4a01b600db0128130056421b0a4503f00150051503ef01510052005900be00c1000ab50008b6000542702ecd79d8ce605a5400005500007300005a0000c0000007c700000017f1000059d910002d32b05300000000570000000064000000f7bf000000000000000163c803a868010a25b5581d49fe5400db0127130057421b0a4503f00150051503ef01510052005900be00c1000ab50008b60005427039cd79d8ce605a5400005500007300005a0000c0000007c700000017f1000059d910002d32995300000000570000000064000000f7bf000000000000000163c803a4b2010a25cc861d49f75c00db0124130058421b0a4503f00150051503ef01510052005900be00c1000ab50008b6000542703ccd79d8ce605a5400005500007300005a0000c0000007c700000018f1000059d910002d32695300000000570000000064000000f7bf000000000004`
@@ -51,7 +118,7 @@ func ExampleHumanDecoder_Human() {
 	bs, _ := hex.DecodeString(stringData)
 
 	// decode a raw data byte slice
-	parsedData, err := Decode(&bs)
+	parsedData, err := Decode(&bs, "UDP")
 	if err != nil {
 		log.Panicf("Error when decoding a bs, %v\n", err)
 	}
@@ -190,14 +257,14 @@ func ExampleHumanDecoder_Human() {
 	// Property Name: LVC CNG Used, Value: 0
 }
 
-func BenchmarkDecode(b *testing.B) {
+func BenchmarkUDPDecode(b *testing.B) {
 	stringData := `0086cafe0101000f3335323039333038353639383230368e0100000167efa919800200000000000000000000000000000000fc0013000800ef0000f00000150500c80000450200010000710000fc00000900b5000000b600000042305600cd432a00ce6064001100090012ff22001303d1000f0000000200f1000059d900100000000000000000010086cafe0191000f3335323039333038353639383230368e0100000167efad92080200000000000000000000000000000000fc0013000800ef0000f00000150500c80000450200010000715800fc01000900b5000000b600000042039d00cd432a00ce60640011015f0012fd930013036f000f0000000200f1000059d900100000000000000000010086cafe01a0000f3335323039333038353639383230368e01000000f9cebaeac80200000000000000000000000000000000fc0013000800ef0000f00000150000c80000450200010000710000fc00000900b5000000b600000042305400cd000000ce0000001103570012fe8900130196000f0000000200f10000000000100000000000000000010083cafe0101000f3335323039333038353639383230368e0100000167f1aeec00000a750e8f1d43443100f800b210000000000012000700ef0000f00000150500c800004501000100007142000900b5000600b6000500422fb300cd432a00ce60640011000700120007001303ec000f0000000200f1000059d90010000000000000000001`
 
 	bs, _ := hex.DecodeString(stringData)
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := Decode(&bs)
+		_, err := Decode(&bs, "UDP")
 		if err != nil {
 			log.Panicf("Error when decoding a bs, %v\n", err)
 		}
@@ -216,7 +283,7 @@ func BenchmarkHuman(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		// decode a raw data byte slice
-		parsedData, err := Decode(&bs)
+		parsedData, err := Decode(&bs, "UDP")
 		if err != nil {
 			log.Panicf("Error when decoding a bs, %v\n", err)
 		}
