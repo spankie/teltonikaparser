@@ -3626,5 +3626,20 @@ const FMBXY string = `{
        "HWSupport":"FMB100, FMB110, FMB120, FMB122, FMB125",
        "Parametr Group":"LVCAN elements",
        "FinalConversion":"toUint8"
-    }
+    
+   },
+   "389":{
+      "No":"107",
+      "PropertyName":"Button Click",
+      "Bytes":"1",
+      "Type":"Unsigned",
+      "Min":"0",
+      "Max":"255",
+      "Multiplier":"-",
+      "Units":"",
+      "Description":"BUTTON CLICK",
+      "HWSupport":"TMT250, GH5200",
+      "Parametr Group":"",
+      "FinalConversion":"to[]byte"
+   }
  }`
